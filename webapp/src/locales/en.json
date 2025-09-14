@@ -451,6 +451,7 @@
     "inverterchannelinfo": {
         "String": "String {num}",
         "Phase": "Phase {num}",
+        "AC": "AC",
         "General": "General"
     },
     "invertertotalinfo": {
