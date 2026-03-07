@@ -202,7 +202,11 @@
                                             >
                                                 <div class="col" v-if="chanType.obj[channel]">
                                                     <InverterChannelInfo
-                                                        :channelData="isThreePhaseInverter(inverter) ? getAcSummaryData(chanType.obj[channel]) : chanType.obj[channel]"
+                                                        :channelData="
+                                                            isThreePhaseInverter(inverter)
+                                                                ? getAcSummaryData(chanType.obj[channel])
+                                                                : chanType.obj[channel]
+                                                        "
                                                         :channelType="chanType.name"
                                                         :channelNumber="channel"
                                                     />
@@ -1049,9 +1053,14 @@ export default defineComponent({
             // For 3-phase inverters, exclude per-phase fields and dummy Voltage/Current
             // from the AC summary card — they are shown in the individual Phase panels
             const excludeKeys = [
-                'Voltage', 'Current',
-                'Voltage Ph1-N', 'Voltage Ph2-N', 'Voltage Ph3-N',
-                'Current Ph1', 'Current Ph2', 'Current Ph3',
+                'Voltage',
+                'Current',
+                'Voltage Ph1-N',
+                'Voltage Ph2-N',
+                'Voltage Ph3-N',
+                'Current Ph1',
+                'Current Ph2',
+                'Current Ph3',
             ];
             const filtered: Partial<InverterStatistics> = {};
             for (const [key, value] of Object.entries(acData)) {
