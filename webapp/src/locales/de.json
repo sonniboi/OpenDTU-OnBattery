@@ -473,7 +473,13 @@
         "PowerFactor": "Leistungsfaktor",
         "ReactivePower": "Blindleistung",
         "Efficiency": "Wirkungsgrad",
-        "Irradiation": "Einstrahlung"
+        "Irradiation": "Einstrahlung",
+        "Voltage Ph1-N": "Spannung Ph1-N",
+        "Voltage Ph2-N": "Spannung Ph2-N",
+        "Voltage Ph3-N": "Spannung Ph3-N",
+        "Current Ph1": "Strom Ph1",
+        "Current Ph2": "Strom Ph2",
+        "Current Ph3": "Strom Ph3"
     },
     "maintenancereboot": {
         "DeviceReboot": "Gerät neu starten",
