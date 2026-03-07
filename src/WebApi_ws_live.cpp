@@ -403,6 +403,7 @@ void WebApiWsLiveClass::onLivedataStatus(AsyncWebServerRequest* request)
 
                 JsonObject invObject = invArray.add<JsonObject>();
                 generateInverterCommonJsonResponse(invObject, inv);
+                generateInverterChannelJsonResponse(invObject, inv);
             }
         }
 

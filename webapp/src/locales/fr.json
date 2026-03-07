@@ -442,7 +442,13 @@
         "PowerFactor": "Facteur de puissance",
         "ReactivePower": "Puissance réactive",
         "Efficiency": "Efficacité",
-        "Irradiation": "Irradiation"
+        "Irradiation": "Irradiation",
+        "Voltage Ph1-N": "Tension Ph1-N",
+        "Voltage Ph2-N": "Tension Ph2-N",
+        "Voltage Ph3-N": "Tension Ph3-N",
+        "Current Ph1": "Courant Ph1",
+        "Current Ph2": "Courant Ph2",
+        "Current Ph3": "Courant Ph3"
     },
     "maintenancereboot": {
         "DeviceReboot": "Redémarrage de l'appareil",
