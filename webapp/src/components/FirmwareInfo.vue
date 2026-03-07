@@ -24,7 +24,7 @@
                                 v-tooltip
                                 :title="$t('firmwareinfo.FirmwareVersionHint')"
                             >
-                                {{ systemStatus.git_hash }}
+                                {{ systemStatus.git_is_hash ? systemStatus.git_branch : systemStatus.git_hash }}
                             </a>
                         </td>
                     </tr>
@@ -126,7 +126,7 @@ export default defineComponent({
         },
         versionInfoUrl(): string {
             if (this.systemStatus.git_is_hash) {
-                return 'https://github.com/hoylabs/OpenDTU-OnBattery/commits/' + this.systemStatus.git_hash;
+                return 'https://github.com/hoylabs/OpenDTU-OnBattery/pull/2195';
             }
             return 'https://github.com/hoylabs/OpenDTU-OnBattery/releases/tag/' + this.systemStatus.git_hash;
         },
