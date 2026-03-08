@@ -7,3 +7,13 @@ webapp_dist/
 .DS_Store
 /test/test_overscaling
 /.idea
+
+# NEVER commit credentials, tokens, or secrets
+.env
+.env.*
+*.token
+*.secret
+*_credentials
+*_creds
+secrets.yml
+secrets.yaml
