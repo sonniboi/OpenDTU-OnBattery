@@ -8,3 +8,13 @@ webapp_dist/
 /.idea
 /test/test_overscaling
 /test/test_chargedistributor
+
+# NEVER commit credentials, tokens, or secrets
+.env
+.env.*
+*.token
+*.secret
+*_credentials
+*_creds
+secrets.yml
+secrets.yaml
