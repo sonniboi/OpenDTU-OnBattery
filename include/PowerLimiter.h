@@ -67,7 +67,7 @@ private:
     Status _lastStatus = Status::Initializing;
     uint32_t _lastStatusPrinted = 0;
     uint32_t _lastCalculation = 0;
-    static constexpr uint32_t _calculationBackoffMsDefault = 128;
+    static constexpr uint32_t _calculationBackoffMsDefault = 32;
     uint32_t _calculationBackoffMs = _calculationBackoffMsDefault;
     Mode _mode = Mode::Normal;
 
