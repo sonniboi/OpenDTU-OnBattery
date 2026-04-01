@@ -1,3 +1,6 @@
+> **Custom Fork** — Adds 3-phase live view support for Hoymiles HMT inverters (HMT-2250/1800-6T with 3×AC inputs).
+> Based on [hoylabs/OpenDTU-OnBattery](https://github.com/hoylabs/OpenDTU-OnBattery). Custom builds: [Releases](https://github.com/sonniboi/OpenDTU-OnBattery/releases) | Branch: [`custom-3phase-build`](https://github.com/sonniboi/OpenDTU-OnBattery/tree/custom-3phase-build)
+
 [![OpenDTU-OnBattery Build](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/build.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/build.yml)
 [![cpplint](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/cpplint.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/cpplint.yml)
 [![Yarn Linting](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/yarnlint.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/yarnlint.yml)
