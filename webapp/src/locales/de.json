@@ -140,6 +140,7 @@
     "home": {
         "LiveData": "Live-Daten",
         "SerialNumber": "Seriennummer: ",
+        "Firmware": "Firmware: ",
         "CurrentLimit": "Aktuelles Limit",
         "ShowSetInverterLimit": "Zeige / Setze Wechselrichterlimit",
         "TurnOnOff": "Schalte Wechselrichter ein oder aus",

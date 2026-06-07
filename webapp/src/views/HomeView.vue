@@ -98,6 +98,10 @@
                                     <div style="padding-right: 2em">
                                         {{ $t('home.SerialNumber') }}{{ inverter.serial }}
                                     </div>
+                                    <div v-if="devInfoCache[inverter.serial]?.valid_data" style="padding-right: 2em">
+                                        {{ $t('home.Firmware')
+                                        }}{{ formatVersion(devInfoCache[inverter.serial]!.fw_build_version) }}
+                                    </div>
                                     <div style="padding-right: 2em">
                                         {{ $t('home.CurrentLimit') }}:
                                         <template v-if="inverter.limit_absolute > -1">
@@ -631,6 +635,7 @@ export default defineComponent({
             devInfoView: {} as bootstrap.Modal,
             devInfoList: {} as DevInfoStatus,
             devInfoLoading: true,
+            devInfoCache: {} as Record<string, DevInfoStatus>,
             gridProfileView: {} as bootstrap.Modal,
             gridProfileList: {} as GridProfileStatus,
             gridProfileRawList: {} as GridProfileRawdata,
@@ -722,9 +727,31 @@ export default defineComponent({
         hasInverters(): boolean {
             return this.liveData?.inverters?.length > 0 || false;
         },
+        formatVersion() {
+            return (value: number) => {
+                const version_major = Math.floor(value / 10000);
+                const version_minor = Math.floor((value - version_major * 10000) / 100);
+                const version_patch = Math.floor(value - version_major * 10000 - version_minor * 100);
+                return version_major + '.' + version_minor + '.' + version_patch;
+            };
+        },
     },
     methods: {
         isLoggedIn,
+        ensureDevInfo() {
+            this.liveData?.inverters?.forEach((inv) => {
+                if (this.devInfoCache[inv.serial] !== undefined) {
+                    return;
+                }
+                fetch('/api/devinfo/status?inv=' + inv.serial, { headers: authHeader() })
+                    .then((response) => handleResponse(response, this.$emitter, this.$router))
+                    .then((data) => {
+                        if (data) {
+                            this.devInfoCache[inv.serial] = data;
+                        }
+                    });
+            });
+        },
         getInitialData(triggerLoading: boolean = true) {
             if (triggerLoading) {
                 this.dataLoading = true;
@@ -736,6 +763,7 @@ export default defineComponent({
                     if (triggerLoading) {
                         this.dataLoading = false;
                     }
+                    this.ensureDevInfo();
                 });
         },
         reloadData() {
@@ -778,6 +806,7 @@ export default defineComponent({
             if (idx == -1) {
                 Object.assign(this.liveData.inverters, newData.inverters);
                 this.liveData.inverters.forEach((inv) => this.resetDataAging(inv));
+                this.ensureDevInfo();
             } else if (this.liveData.inverters[idx]) {
                 Object.assign(this.liveData.inverters[idx], newData.inverters[0]);
                 this.resetDataAging(this.liveData.inverters[idx]);
