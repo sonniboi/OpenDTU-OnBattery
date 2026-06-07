@@ -1,5 +1,13 @@
-> **Custom Fork** — Adds 3-phase live view support for Hoymiles HMT inverters (HMT-2250/1800-6T with 3×AC inputs).
-> Based on [hoylabs/OpenDTU-OnBattery](https://github.com/hoylabs/OpenDTU-OnBattery). Custom builds: [Releases](https://github.com/sonniboi/OpenDTU-OnBattery/releases) | Branch: [`custom-3phase-build`](https://github.com/sonniboi/OpenDTU-OnBattery/tree/custom-3phase-build)
+> **Custom Fork of [hoylabs/OpenDTU-OnBattery](https://github.com/hoylabs/OpenDTU-OnBattery)**
+> Custom builds: [Releases](https://github.com/sonniboi/OpenDTU-OnBattery/releases) · Branch: [`custom-3phase-build`](https://github.com/sonniboi/OpenDTU-OnBattery/tree/custom-3phase-build)
+>
+> **What this fork adds on top of upstream:**
+> - **3-phase live view for Hoymiles HMT inverters** — correct per-phase AC display (voltage L1–L3 + neutral, current L1–L3) for HMT-2250-6T / HMT-1800-6T and similar models with 3×AC outputs, instead of the single-phase summary the upstream view assumes.
+> - **Inverter firmware version in the live view header** — each inverter card shows its Hoymiles firmware build (e.g. `1.0.10`) inline next to the serial number, no need to open the device-info dialog.
+> - **Reduced Dynamic Power Limiter (DPL) reaction latency** — limit-update backoff lowered to 32 ms and power-meter freshness window to 500 ms, for faster zero-feed-in regulation on battery-powered setups.
+> - **Branch / PR link in the firmware info** — custom builds expose their source branch and PR in the web UI, so it is always clear which build is running.
+>
+> Everything else is upstream OpenDTU-OnBattery; see the changelog below for the full upstream feature set.
 
 [![OpenDTU-OnBattery Build](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/build.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/build.yml)
 [![cpplint](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/cpplint.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/cpplint.yml)
