@@ -140,6 +140,7 @@
     "home": {
         "LiveData": "Live Data",
         "SerialNumber": "Serial Number: ",
+        "Firmware": "Firmware: ",
         "CurrentLimit": "Current Limit",
         "ShowSetInverterLimit": "Show / Set Inverter Limit",
         "TurnOnOff": "Turn Inverter on/off",
