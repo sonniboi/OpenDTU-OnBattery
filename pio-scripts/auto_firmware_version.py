@@ -40,7 +40,9 @@ def get_build_branch():
     try:
         branch_name = porcelain.active_branch('.').decode('utf-8')  # '.' refers to the repository root dir
     except Exception as err:
-        branch_name = "master"
+        # Tag/CI builds run in detached HEAD -> active_branch() throws. Fall back to the
+        # fork's default branch instead of upstream "master".
+        branch_name = "custom-3phase-build"
     print("Firmware Branch: " + branch_name)
     return branch_name
 
