@@ -125,10 +125,11 @@ export default defineComponent({
             };
         },
         versionInfoUrl(): string {
+            const repo = 'https://github.com/sonniboi/OpenDTU-OnBattery';
             if (this.systemStatus.git_is_hash) {
-                return 'https://github.com/hoylabs/OpenDTU-OnBattery/pull/2195';
+                return repo + '/commit/' + this.systemStatus.git_hash;
             }
-            return 'https://github.com/hoylabs/OpenDTU-OnBattery/releases/tag/' + this.systemStatus.git_hash;
+            return repo + '/releases/tag/' + this.systemStatus.git_hash;
         },
     },
 });

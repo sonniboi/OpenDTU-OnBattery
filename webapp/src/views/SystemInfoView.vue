@@ -89,11 +89,12 @@ export default defineComponent({
                 ? this.systemDataList.git_hash?.substring(1)
                 : this.systemDataList.git_hash;
 
-            // Handle format "v0.1-5-gabcdefh"
-            if (this.systemDataList.git_hash?.lastIndexOf('-') >= 0) {
-                this.systemDataList.git_hash = this.systemDataList.git_hash.substring(
-                    this.systemDataList.git_hash.lastIndexOf('-') + 2
-                );
+            // Handle git-describe format "v0.1-5-gabcdefh": only treat as a hash when
+            // there is an actual "-g<hash>" suffix. Custom release tags like
+            // "custom-2026.05.18-2" contain dashes but are NOT dev hashes.
+            const describeMatch = this.systemDataList.git_hash?.match(/-g([0-9a-f]{7,})$/i);
+            if (describeMatch) {
+                this.systemDataList.git_hash = describeMatch[1]!;
                 this.systemDataList.git_is_hash = true;
             }
 
@@ -102,7 +103,7 @@ export default defineComponent({
             }
 
             const fetchUrl =
-                'https://api.github.com/repos/hoylabs/OpenDTU-OnBattery/compare/' +
+                'https://api.github.com/repos/sonniboi/OpenDTU-OnBattery/compare/' +
                 this.systemDataList.git_hash +
                 '...' +
                 this.systemDataList.git_branch;
