@@ -49,10 +49,10 @@ bool SystemConfigParaCommand::handleResponse(const fragment_t fragment[], const 
     // In case of low power in the inverter it occours that some incomplete fragments
     // with a valid CRC are received.
     const uint8_t fragmentsSize = getTotalFragmentSize(fragment, max_fragment_id);
-    const uint8_t expectedSize = _inv->SystemConfigPara()->getExpectedByteCount();
-    if (fragmentsSize < expectedSize) {
-        ESP_LOGE(TAG, "ERROR in %s: Received fragment size: %" PRIu8 ", min expected size: %" PRIu8 "",
-            getCommandName().c_str(), fragmentsSize, expectedSize);
+    const uint8_t minimumResponseSize = _inv->SystemConfigPara()->getMinimumResponseSize();
+    if (fragmentsSize < minimumResponseSize) {
+        ESP_LOGE(TAG, "ERROR in %s: Received fragment size: %" PRIu8 ", minimum response size: %" PRIu8 "",
+            getCommandName().c_str(), fragmentsSize, minimumResponseSize);
 
         return false;
     }

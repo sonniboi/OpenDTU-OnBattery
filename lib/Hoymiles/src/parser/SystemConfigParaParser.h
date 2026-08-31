@@ -2,7 +2,8 @@
 #pragma once
 #include "Parser.h"
 
-#define SYSTEM_CONFIG_PARA_SIZE 16
+#define SYSTEM_CONFIG_PARA_BUFFER_SIZE 48
+#define SYSTEM_CONFIG_PARA_DEFAULT_MIN_RESPONSE_SIZE 16
 
 class SystemConfigParaParser : public Parser {
 public:
@@ -23,12 +24,14 @@ public:
     uint32_t getLastUpdateRequest() const;
     void setLastUpdateRequest(const uint32_t lastUpdate);
 
-    // Returns 1 based amount of expected bytes of data
-    uint8_t getExpectedByteCount() const;
+    // Returns the minimum number of reassembled response bytes required for validity
+    uint8_t getMinimumResponseSize() const;
+    void setMinimumResponseSize(const uint8_t size);
 
 private:
-    uint8_t _payload[SYSTEM_CONFIG_PARA_SIZE];
+    uint8_t _payload[SYSTEM_CONFIG_PARA_BUFFER_SIZE];
     uint8_t _payloadLength;
+    uint8_t _minimumResponseSize = SYSTEM_CONFIG_PARA_DEFAULT_MIN_RESPONSE_SIZE;
 
     LastCommandSuccess _lastLimitCommandSuccess = CMD_OK; // Set to OK because we have to assume nothing is done at startup
     LastCommandSuccess _lastLimitRequestSuccess = CMD_NOK; // Set to NOK to fetch at startup

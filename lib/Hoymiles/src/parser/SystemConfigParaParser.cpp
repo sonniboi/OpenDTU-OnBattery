@@ -31,13 +31,13 @@ SystemConfigParaParser::SystemConfigParaParser()
 
 void SystemConfigParaParser::clearBuffer()
 {
-    memset(_payload, 0, SYSTEM_CONFIG_PARA_SIZE);
+    memset(_payload, 0, SYSTEM_CONFIG_PARA_BUFFER_SIZE);
     _payloadLength = 0;
 }
 
 void SystemConfigParaParser::appendFragment(const uint8_t offset, const uint8_t* payload, const uint8_t len)
 {
-    if (offset + len > (SYSTEM_CONFIG_PARA_SIZE)) {
+    if (offset + len > (SYSTEM_CONFIG_PARA_BUFFER_SIZE)) {
         ESP_LOGE(TAG, "(%s, %d) stats packet too large for buffer", __FILE__, __LINE__);
         return;
     }
@@ -108,7 +108,12 @@ void SystemConfigParaParser::setLastUpdateRequest(const uint32_t lastUpdate)
     setLastUpdate(lastUpdate);
 }
 
-uint8_t SystemConfigParaParser::getExpectedByteCount() const
+uint8_t SystemConfigParaParser::getMinimumResponseSize() const
 {
-    return SYSTEM_CONFIG_PARA_SIZE;
+    return _minimumResponseSize;
+}
+
+void SystemConfigParaParser::setMinimumResponseSize(const uint8_t size)
+{
+    _minimumResponseSize = min(size, static_cast<uint8_t>(SYSTEM_CONFIG_PARA_BUFFER_SIZE));
 }
