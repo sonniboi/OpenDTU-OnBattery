@@ -109,7 +109,11 @@
 
 #define LED_BRIGHTNESS 100U
 
-#define MAX_INVERTER_LIMIT 2250
+// Obergrenze des MANUELLEN Limit-Pfads (Web-API WebApi_limit.cpp, HA-number-Entities
+// MqttHandleHass.cpp). Der DPL nutzt diese Konstante NICHT - er regelt ueber die
+// per-Inverter upper_power_limit. 2250 war auf den groessten HMT zugeschnitten;
+// 4400 = Spitzenausgangsleistung des MIT-5000-8T laut Datenblatt.
+#define MAX_INVERTER_LIMIT 4400
 
 #define LANG_PACK_SUFFIX ".lang.json"
 
