@@ -20,7 +20,10 @@ static int8_t getMitHopOffsetForFragment(const uint8_t fragmentId)
         return 0;
     }
 
-    return static_cast<int8_t>((id - 1) % 3) - 1;
+    // HOMELAB-TEST 2026-09-10: fragments 1/4/7 never answered on base-1 (867.75 MHz,
+    // 96 requests, 0 replies); 2/5/8 answer on base, 3/6/9 on base+1. Hypothesis:
+    // channel set is {base, base+1, base+2}, so try base+2 for the 1/4/7 group.
+    return static_cast<int8_t>(((id - 1) % 3 + 2) % 3);
 }
 
 constexpr CountryFrequencyDefinition_t make_value(FrequencyBand_t Band, uint32_t Freq_Legal_Min, uint32_t Freq_Legal_Max, uint32_t Freq_Default, uint32_t Freq_StartUp)
