@@ -85,6 +85,10 @@ const devInfo_t devInfo[] = {
     { { 0x10, 0x33, 0x11, ALL }, 1800, "HMT-1800-6T" }, // 01
     { { 0x10, 0x33, 0x31, ALL }, 2250, "HMT-2250-6T" }, // 01
 
+    // MIT-8T (backport tbnobody/OpenDTU#3161 bringt keine DevInfo-Einträge mit).
+    // 0x10647100 am realen Gerät gelesen (Serial 1520a38d4001, FW 01.04.00), 2026-09-27.
+    { { 0x10, 0x64, 0x71, ALL }, 4000, "MIT-4000-8T" },
+
     { { 0xF1, 0x01, 0x10, ALL }, 600, "HERF-600" }, // 00
     { { 0xF1, 0x01, 0x14, ALL }, 800, "HERF-800" }, // 00
     { { 0xF1, 0x01, 0x24, ALL }, 1600, "HERF-1600" }, // 00
