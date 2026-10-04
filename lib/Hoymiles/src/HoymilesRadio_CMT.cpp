@@ -441,7 +441,8 @@ void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
         const int8_t offset = mitWrap(_mitPhase + static_cast<int8_t>((k - 1) % 3));
         if (offset != currentOffset) {
             currentOffset = offset;
-            _radio->stopListening();
+            // no stopListening() here: it puts the chip to SLEEP and the crystal
+            // restart costs the next fragment. startListening() goes via STBY.
             _radio->setChannel(static_cast<uint8_t>(baseChannel + offset));
             _radio->startListening();
         }
