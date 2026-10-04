@@ -137,6 +137,31 @@ const std::array<const AlarmMessage_t, ALARM_MSG_COUNT> AlarmLogParser::_alarmMe
 
     { AlarmMessageType_t::ALL, 1111, "Repeater", "", "" },
 
+    // MIT-4000/4500/5000-8T alarm list (Hoymiles manual V20241202, 6.1): four
+    // MPPTs, so 215/216 = MPPT-C and 220/221 = MPPT-D, 128/129 are software error codes
+    { AlarmMessageType_t::MIT, 128, "Software error code 128", "Softwarefehlercode 128", "" },
+    { AlarmMessageType_t::MIT, 129, "Software error code 129", "Softwarefehlercode 129", "" },
+    { AlarmMessageType_t::MIT, 200, "PV-1: Reversely connected", "PV-1: Verpolt angeschlossen", "" },
+    { AlarmMessageType_t::MIT, 201, "PV-2: Reversely connected", "PV-2: Verpolt angeschlossen", "" },
+    { AlarmMessageType_t::MIT, 202, "PV-3: Reversely connected", "PV-3: Verpolt angeschlossen", "" },
+    { AlarmMessageType_t::MIT, 203, "PV-4: Reversely connected", "PV-4: Verpolt angeschlossen", "" },
+    { AlarmMessageType_t::MIT, 204, "Wrong PV wiring", "Falsche PV-Verdrahtung", "" },
+    { AlarmMessageType_t::MIT, 215, "MPPT-C: Input overvoltage", "MPPT-C: Eingangsüberspannung", "MPPT-C: Surtension d’entrée" },
+    { AlarmMessageType_t::MIT, 216, "MPPT-C: Input undervoltage", "MPPT-C: Eingangsunterspannung", "MPPT-C: Sous-tension d’entrée" },
+    { AlarmMessageType_t::MIT, 220, "MPPT-D: Input overvoltage", "MPPT-D: Eingangsüberspannung", "" },
+    { AlarmMessageType_t::MIT, 221, "MPPT-D: Input undervoltage", "MPPT-D: Eingangsunterspannung", "" },
+    { AlarmMessageType_t::MIT, 315, "Hardware error code 315", "Hardwarefehlercode 315", "" },
+    { AlarmMessageType_t::MIT, 316, "Hardware error code 316", "Hardwarefehlercode 316", "" },
+    { AlarmMessageType_t::MIT, 317, "Hardware error code 317", "Hardwarefehlercode 317", "" },
+    { AlarmMessageType_t::MIT, 318, "Hardware error code 318", "Hardwarefehlercode 318", "" },
+    { AlarmMessageType_t::MIT, 319, "Hardware error code 319", "Hardwarefehlercode 319", "" },
+    { AlarmMessageType_t::MIT, 320, "Hardware error code 320", "Hardwarefehlercode 320", "" },
+    { AlarmMessageType_t::MIT, 321, "Hardware error code 321", "Hardwarefehlercode 321", "" },
+    { AlarmMessageType_t::MIT, 322, "Hardware error code 322", "Hardwarefehlercode 322", "" },
+    { AlarmMessageType_t::MIT, 323, "Hardware error code 323", "Hardwarefehlercode 323", "" },
+    { AlarmMessageType_t::MIT, 324, "Hardware error code 324", "Hardwarefehlercode 324", "" },
+    { AlarmMessageType_t::MIT, 325, "Hardware error code 325", "Hardwarefehlercode 325", "" },
+
     { AlarmMessageType_t::ALL, 2000, "Standby", "", "" },
     { AlarmMessageType_t::ALL, 2001, "Standby", "", "" },
     { AlarmMessageType_t::ALL, 2002, "Standby", "", "" },

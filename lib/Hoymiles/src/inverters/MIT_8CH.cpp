@@ -109,6 +109,7 @@ static const channelMetaData_t channelMetaData[] = {
 MIT_8CH::MIT_8CH(HoymilesRadio* radio, const uint64_t serial)
     : HMT_Abstract(radio, serial)
 {
+    EventLog()->setMessageType(AlarmMessageType_t::MIT);
 }
 
 // HOMELAB 2026-10-04: without AC the MIT sends a burst within ~0,4 s (6
