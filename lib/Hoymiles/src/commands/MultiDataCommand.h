@@ -11,6 +11,7 @@ public:
 
     void setTime(const time_t time);
     time_t getTime() const;
+    void prepareResend() override;
 
     CommandAbstract* getRequestFrameCommand(const uint8_t frame_no);
 

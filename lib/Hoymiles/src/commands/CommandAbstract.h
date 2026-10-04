@@ -53,6 +53,9 @@ public:
 
     virtual bool handleResponse(const fragment_t fragment[], const uint8_t max_fragment_id) = 0;
     virtual void gotTimeout();
+    // called before the whole request is sent again after stalled retransmits;
+    // data requests renew their timestamp so the inverter sees a new request
+    virtual void prepareResend() { }
 
     // Sets the amount how often the specific command is resent if all fragments where missing
     virtual uint8_t getMaxResendCount() const;

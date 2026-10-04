@@ -70,6 +70,20 @@ void MultiDataCommand::setTime(const time_t time)
     udpateCRC();
 }
 
+void MultiDataCommand::prepareResend()
+{
+    // HOMELAB 2026-10-04: an identical repeat continues the MIT's channel
+    // hopping with a shifted phase, a new request (new timestamp) starts it
+    // fresh: fragment k on offset (k-1)%3-1, so listening on -1/0/+1 for three
+    // consecutive requests yields fragments 1,4 / 2,5 / 3,6.
+    time_t now;
+    time(&now);
+    if (now <= getTime()) {
+        now = getTime() + 1;
+    }
+    setTime(now);
+}
+
 time_t MultiDataCommand::getTime() const
 {
     return (time_t)(_payload[12] << 24)

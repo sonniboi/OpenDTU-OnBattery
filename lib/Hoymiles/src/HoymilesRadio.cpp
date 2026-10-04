@@ -74,6 +74,7 @@ void HoymilesRadio::handleReceivedPackage()
 
             } else if (verifyResult == FRAGMENT_PARTIAL_RESEND) {
                 ESP_LOGW(TAG, "Retransmits stalled, resend whole request");
+                cmd->prepareResend();
                 sendLastPacketAgain();
 
             } else if (verifyResult == FRAGMENT_ALL_MISSING_TIMEOUT) {
