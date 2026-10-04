@@ -18,4 +18,5 @@ public:
     uint8_t getMaxRetransmitCount() const override;
     uint8_t getMaxStalledRetransmitCount() const override;
     bool sendAlarmLogRequest(const bool force = false) override;
+    bool sendChangeChannelRequest() override;
 };

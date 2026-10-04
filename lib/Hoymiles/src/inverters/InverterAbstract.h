@@ -66,6 +66,7 @@ public:
     // number of retransmit requests without any new fragment after which the
     // partial answer is dropped and the whole request is sent again (0 = off)
     virtual uint8_t getMaxStalledRetransmitCount() const;
+    uint32_t getLastRxFragmentMillis() const { return _lastRxFragmentMillis; }
 
     bool isProducing();
     bool isReachable();
@@ -159,6 +160,7 @@ private:
     uint8_t _rxFragmentRetransmitCnt = 0;
     uint8_t _rxFragmentReceivedAtRetransmit = 0;
     uint8_t _rxFragmentStalledCnt = 0;
+    uint32_t _lastRxFragmentMillis = 0;
 
     // true if the partial answer stalled and the whole request should be resent
     bool partialAnswerStalled(CommandAbstract& cmd);

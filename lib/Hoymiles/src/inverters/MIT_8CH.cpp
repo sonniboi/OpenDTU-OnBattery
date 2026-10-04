@@ -133,6 +133,19 @@ uint8_t MIT_8CH::getMaxStalledRetransmitCount() const
     return 2;
 }
 
+bool MIT_8CH::sendChangeChannelRequest()
+{
+    // HOMELAB 2026-10-04: the MIT is "unreachable" as long as no answer is
+    // complete, which made every poll cycle send a ChannelChange on 868 MHz,
+    // the channel of the production DTU. If fragments arrived on the target
+    // frequency within the last 15 min, the MIT is already there: skip it.
+    const uint32_t last = getLastRxFragmentMillis();
+    if (last != 0 && millis() - last < 15 * 60 * 1000UL) {
+        return false;
+    }
+    return HMT_Abstract::sendChangeChannelRequest();
+}
+
 bool MIT_8CH::sendAlarmLogRequest(const bool force)
 {
     // HOMELAB 2026-10-04: the AlarmData answer (12 fragments, 12 s timeout) is
