@@ -19,4 +19,9 @@ public:
     uint8_t getMaxStalledRetransmitCount() const override;
     bool sendAlarmLogRequest(const bool force = false) override;
     bool sendChangeChannelRequest() override;
+    bool sendDevInfoRequest() override;
+    bool isReachable() override;
+
+private:
+    uint32_t _lastDevInfoAllRequest = 0;
 };

@@ -70,7 +70,7 @@ public:
     uint32_t getLastRxFragmentMillis() const { return _lastRxFragmentMillis; }
 
     bool isProducing();
-    bool isReachable();
+    virtual bool isReachable();
 
     void setEnablePolling(const bool enabled);
     bool getEnablePolling() const;

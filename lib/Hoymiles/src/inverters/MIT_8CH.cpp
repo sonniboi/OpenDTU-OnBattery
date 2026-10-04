@@ -30,6 +30,9 @@
  *   70: value matches PAC — possibly apparent power (S in VA)
  */
 #include "MIT_8CH.h"
+#include "../HoymilesRadio.h"
+#include "../commands/DevInfoAllCommand.h"
+#include "../commands/DevInfoSimpleCommand.h"
 #include "commands/CommandAbstract.h"
 
 static const byteAssign_t byteAssignment[] = {
@@ -148,6 +151,53 @@ bool MIT_8CH::sendChangeChannelRequest()
         return false;
     }
     return HMT_Abstract::sendChangeChannelRequest();
+}
+
+bool MIT_8CH::sendDevInfoRequest()
+{
+    // HOMELAB 2026-10-04: without AC the MIT answers DevInfoSimple but never
+    // DevInfoAll. Hoymiles.cpp asks for both on every poll until DevInfoAll
+    // arrived (90 requests in 5 min, blocking RealTimeRunData). Ask for
+    // DevInfoAll at most every 10 min, DevInfoSimple as long as it is missing.
+    if (!getEnablePolling()) {
+        return false;
+    }
+
+    time_t now;
+    time(&now);
+    bool sent = false;
+
+    if (DevInfo()->getLastUpdateAll() == 0
+        && (_lastDevInfoAllRequest == 0 || millis() - _lastDevInfoAllRequest > 10 * 60 * 1000UL)) {
+        _lastDevInfoAllRequest = millis();
+        auto cmdAll = _radio->prepareCommand<DevInfoAllCommand>(this);
+        cmdAll->setTime(now);
+        _radio->enqueCommand(cmdAll);
+        sent = true;
+    }
+
+    if (DevInfo()->getLastUpdateSimple() == 0) {
+        auto cmdSimple = _radio->prepareCommand<DevInfoSimpleCommand>(this);
+        cmdSimple->setTime(now);
+        _radio->enqueCommand(cmdSimple);
+        sent = true;
+    }
+
+    return sent;
+}
+
+bool MIT_8CH::isReachable()
+{
+    // HOMELAB 2026-10-04: the failure counter is reset by every successful
+    // RealTimeRunData and incremented by every failed one. Without AC several
+    // attempts fail between two successes (fragments of different bursts are
+    // rejected by the CRC), so the threshold of 2-3 flags the MIT unreachable
+    // although fresh data arrives every ~10 s. Judge by the age of the data.
+    if (!getEnablePolling()) {
+        return false;
+    }
+    const uint32_t last = Statistics()->getLastUpdate();
+    return last > 0 && millis() - last < 120 * 1000UL;
 }
 
 bool MIT_8CH::sendAlarmLogRequest(const bool force)
