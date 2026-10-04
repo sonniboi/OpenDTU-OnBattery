@@ -20,10 +20,11 @@ static int8_t getMitHopOffsetForFragment(const uint8_t fragmentId)
         return 0;
     }
 
-    // HOMELAB 2026-10-04: the hop phase differs per device and response type
-    // (MIT-5000: 1/4/7 on base+2; MIT-4000: 1/2/4/5 on base, 3/6/12 on base+1).
-    // Start with the last observed pattern and rotate through {base, +1, +2}
-    // while the same fragment is requested again without an answer.
+    // HOMELAB 2026-10-04: channel survey on the MIT-4000 (no AC) showed the
+    // channel set {base-1, base, base+1}: fragment 1/4 on -250 kHz, 2/5 on the
+    // base, 3/6 on +250 kHz (= upstream formula). The phase was seen to shift
+    // occasionally, so rotate through the set while the same fragment is
+    // requested again without an answer.
     static uint8_t lastFragment = 0;
     static uint8_t attempt = 0;
     if (id == lastFragment) {
@@ -32,8 +33,7 @@ static int8_t getMitHopOffsetForFragment(const uint8_t fragmentId)
         lastFragment = id;
         attempt = 0;
     }
-    const uint8_t initial = (id % 3 == 0) ? 1 : 0;
-    return static_cast<int8_t>((initial + attempt) % 3);
+    return static_cast<int8_t>(((id - 1) + attempt) % 3) - 1;
 }
 
 constexpr CountryFrequencyDefinition_t make_value(FrequencyBand_t Band, uint32_t Freq_Legal_Min, uint32_t Freq_Legal_Max, uint32_t Freq_Default, uint32_t Freq_StartUp)
@@ -188,6 +188,32 @@ void HoymilesRadio_CMT::loop()
         }
     }
 
+    if (_mitFollow) {
+        if (!_busyFlag) {
+            _mitFollow = false;
+        } else {
+            // expected arrival of fragment k: anchor + MIT_FIRST_MS + k * MIT_STEP_MS
+            // (anchor = TX time, re-anchored on every received fragment)
+            const int32_t sinceAnchor = static_cast<int32_t>(millis() - _mitAnchorMillis);
+            int32_t k = _mitAnchorFragment
+                + (sinceAnchor - (_mitAnchorFragment == 0 ? MIT_FIRST_MS : 0) + MIT_STEP_MS / 2) / MIT_STEP_MS;
+            if (_mitAnchorFragment == 0 && k < 1) {
+                k = 1;
+            }
+            if (k >= 1 && k <= MAX_RF_FRAGMENT_COUNT) {
+                const int8_t offset = static_cast<int8_t>((k - 1) % 3) - 1;
+                if (offset != _mitCurrentOffset && !_packetReceived) {
+                    _mitCurrentOffset = offset;
+                    _radio->stopListening();
+                    _radio->setChannel(static_cast<uint8_t>(_mitBaseChannel + offset));
+                    _radio->startListening();
+                }
+            } else if (k > MAX_RF_FRAGMENT_COUNT) {
+                _mitFollow = false;
+            }
+        }
+    }
+
     // Step 1: Drain all available packets from the hardware FIFO into the
     // software ring buffer.
     if (_packetReceived) {
@@ -211,6 +237,16 @@ void HoymilesRadio_CMT::loop()
             if (payloadSize > MAX_RF_PAYLOAD_SIZE) {
                 ESP_LOGW(TAG, "CMT2300A: Invalid payload size %" PRIu8, payloadSize);
                 continue;
+            }
+
+            if (_mitFollow && f.len > 10) {
+                const uint8_t fid = f.fragment[9] & 0x7F;
+                if (f.fragment[9] & 0x80) {
+                    _mitFollow = false; // last fragment of the burst
+                } else if (fid > 0) {
+                    _mitAnchorMillis = millis();
+                    _mitAnchorFragment = fid;
+                }
             }
 
             _rxBuffer.push(f);
@@ -448,21 +484,19 @@ void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
         }
     }
 
-    // HOMELAB-TEST 2026-10-04: channel survey. Without AC the MIT puts only every
-    // third fragment on the base channel. Listen on a different channel for each
-    // new MIT data request (TX stays on the base channel) to learn where the
-    // other fragments are sent. Offsets in channel steps of 250 kHz.
+    // HOMELAB 2026-10-04: without AC the MIT sends its answer fragments
+    // round-robin over {base-1, base, base+1}, ~49 ms apart. Follow it with the
+    // receiver for the initial burst instead of staying on the base channel.
+    _mitFollow = false;
     if (serialPrefix == 0x1520 && !isRequestFrame && cmd.getDataPayload()[0] == 0x15) {
-        static const int8_t sniffOffsets[] = { 0, 1, 2, -1, -2, 3, -3 };
-        static uint8_t sniffIdx = 0;
-        const int8_t offset = sniffOffsets[sniffIdx];
-        sniffIdx = (sniffIdx + 1) % (sizeof(sniffOffsets) / sizeof(sniffOffsets[0]));
         const uint8_t baseChannel = getChannelFromFrequency(_inverterTargetFrequency);
-        const int16_t sniffChannel = static_cast<int16_t>(baseChannel) + offset;
-        if (baseChannel != 0xFF && sniffChannel >= 1 && sniffChannel <= 0xFE) {
-            _radio->setChannel(static_cast<uint8_t>(sniffChannel));
-            ESP_LOGI(TAG, "RX SNIFF: %s listening on offset %+d (%.2f MHz)", cmd.getCommandName().c_str(), offset,
-                getFrequencyFromChannel(static_cast<uint8_t>(sniffChannel)) / 1000000.0);
+        if (baseChannel != 0xFF && baseChannel >= 2 && baseChannel <= 0xFD) {
+            _mitFollow = true;
+            _mitBaseChannel = baseChannel;
+            _mitAnchorMillis = millis();
+            _mitAnchorFragment = 0;
+            _mitCurrentOffset = -1; // fragment 1
+            _radio->setChannel(static_cast<uint8_t>(baseChannel - 1));
         }
     }
 
