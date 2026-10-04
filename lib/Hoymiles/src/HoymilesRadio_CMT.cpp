@@ -429,9 +429,11 @@ void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
     while (!done && millis() - start < MIT_BURST_MAX_MS) {
         const int32_t now = static_cast<int32_t>(millis() - start);
 
-        // fragment expected in the current slot (slot switch half way between)
-        int32_t k = anchorFragment + (now - anchorMs + MIT_STEP_MS / 2) / MIT_STEP_MS;
-        if (now < anchorMs - MIT_STEP_MS / 2) {
+        // timestamps are taken at the END of a fragment; the next one starts
+        // shortly after (airtime ~30 ms of the 50 ms spacing), so switch to the
+        // next channel MIT_SWITCH_MS after the previous fragment ended
+        int32_t k = anchorFragment + (now - anchorMs + MIT_STEP_MS - MIT_SWITCH_MS) / MIT_STEP_MS;
+        if (now < anchorMs + MIT_SWITCH_MS) {
             k = anchorFragment;
         }
         if (k < 1) {

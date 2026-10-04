@@ -96,7 +96,8 @@ private:
     // HOMELAB 2026-10-04: receive a MIT burst with scheduled channel hopping
     void receiveMitBurst(const uint8_t baseChannel);
     int8_t _mitPhase = 0; // channel offset of fragment 1, learned
-    static constexpr int32_t MIT_FIRST_MS = 89; // TX -> fragment 1
+    static constexpr int32_t MIT_FIRST_MS = 52; // end of TX -> end of fragment 1
+    static constexpr int32_t MIT_SWITCH_MS = 5; // switch this long after a fragment ended
     static constexpr int32_t MIT_STEP_MS = 50; // spacing between fragments
     static constexpr uint32_t MIT_BURST_MAX_MS = 800;
 
