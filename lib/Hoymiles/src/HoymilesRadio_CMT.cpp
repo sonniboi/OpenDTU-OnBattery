@@ -188,32 +188,6 @@ void HoymilesRadio_CMT::loop()
         }
     }
 
-    if (_mitFollow) {
-        if (!_busyFlag) {
-            _mitFollow = false;
-        } else {
-            // expected arrival of fragment k: anchor + MIT_FIRST_MS + k * MIT_STEP_MS
-            // (anchor = TX time, re-anchored on every received fragment)
-            const int32_t sinceAnchor = static_cast<int32_t>(millis() - _mitAnchorMillis);
-            int32_t k = _mitAnchorFragment
-                + (sinceAnchor - (_mitAnchorFragment == 0 ? MIT_FIRST_MS : 0) + MIT_STEP_MS / 2) / MIT_STEP_MS;
-            if (_mitAnchorFragment == 0 && k < 1) {
-                k = 1;
-            }
-            if (k >= 1 && k <= MAX_RF_FRAGMENT_COUNT) {
-                const int8_t offset = static_cast<int8_t>((k - 1) % 3) - 1;
-                if (offset != _mitCurrentOffset && !_packetReceived) {
-                    _mitCurrentOffset = offset;
-                    _radio->stopListening();
-                    _radio->setChannel(static_cast<uint8_t>(_mitBaseChannel + offset));
-                    _radio->startListening();
-                }
-            } else if (k > MAX_RF_FRAGMENT_COUNT) {
-                _mitFollow = false;
-            }
-        }
-    }
-
     // Step 1: Drain all available packets from the hardware FIFO into the
     // software ring buffer.
     if (_packetReceived) {
@@ -237,16 +211,6 @@ void HoymilesRadio_CMT::loop()
             if (payloadSize > MAX_RF_PAYLOAD_SIZE) {
                 ESP_LOGW(TAG, "CMT2300A: Invalid payload size %" PRIu8, payloadSize);
                 continue;
-            }
-
-            if (_mitFollow && f.len > 10) {
-                const uint8_t fid = f.fragment[9] & 0x7F;
-                if (f.fragment[9] & 0x80) {
-                    _mitFollow = false; // last fragment of the burst
-                } else if (fid > 0) {
-                    _mitAnchorMillis = millis();
-                    _mitAnchorFragment = fid;
-                }
             }
 
             _rxBuffer.push(f);
@@ -485,18 +449,17 @@ void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
     }
 
     // HOMELAB 2026-10-04: without AC the MIT sends its answer fragments
-    // round-robin over {base-1, base, base+1}, ~49 ms apart. Follow it with the
-    // receiver for the initial burst instead of staying on the base channel.
-    _mitFollow = false;
+    // round-robin over {base-1, base, base+1} (fragment k on offset (k-1)%3-1,
+    // ~50 ms apart) and ignores retransmit requests. Following the hops in
+    // loop() is too slow, so listen on one channel per send of the same request
+    // and collect the fragments over three bursts (the CRC over the whole
+    // payload rejects a mix of differing bursts).
     if (serialPrefix == 0x1520 && !isRequestFrame && cmd.getDataPayload()[0] == 0x15) {
         const uint8_t baseChannel = getChannelFromFrequency(_inverterTargetFrequency);
         if (baseChannel != 0xFF && baseChannel >= 2 && baseChannel <= 0xFD) {
-            _mitFollow = true;
-            _mitBaseChannel = baseChannel;
-            _mitAnchorMillis = millis();
-            _mitAnchorFragment = 0;
-            _mitCurrentOffset = -1; // fragment 1
-            _radio->setChannel(static_cast<uint8_t>(baseChannel - 1));
+            const int8_t offset = static_cast<int8_t>((cmd.getSendCount() - 1) % 3) - 1;
+            _radio->setChannel(static_cast<uint8_t>(baseChannel + offset));
+            ESP_LOGI(TAG, "RX MIT: %s send %" PRIu8 " listening on offset %+d", cmd.getCommandName().c_str(), cmd.getSendCount(), offset);
         }
     }
 

@@ -130,7 +130,7 @@ uint8_t MIT_8CH::getMaxRetransmitCount() const
 
 uint8_t MIT_8CH::getMaxStalledRetransmitCount() const
 {
-    return 2;
+    return 1;
 }
 
 bool MIT_8CH::sendChangeChannelRequest()

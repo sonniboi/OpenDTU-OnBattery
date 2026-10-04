@@ -94,7 +94,7 @@ bool InverterAbstract::partialAnswerStalled(CommandAbstract& cmd)
         return false;
     }
 
-    if (++_rxFragmentStalledCnt <= maxStalled) {
+    if (++_rxFragmentStalledCnt < maxStalled) {
         return false;
     }
 
@@ -301,7 +301,10 @@ uint8_t InverterAbstract::stalledResendOrTimeout(CommandAbstract& cmd)
     // at most MAX_STALLED_RESEND_COUNT fresh requests, then give up right away
     // instead of falling back to the long retransmit tail (blocks the queue)
     if (cmd.getSendCount() <= MAX_STALLED_RESEND_COUNT) {
-        clearRxFragmentBuffer();
+        // keep the fragments already received, the next burst is heard on a
+        // different channel and fills the gaps
+        _rxFragmentRetransmitCnt = 0;
+        _rxFragmentStalledCnt = 0;
         return FRAGMENT_PARTIAL_RESEND;
     }
     cmd.gotTimeout();

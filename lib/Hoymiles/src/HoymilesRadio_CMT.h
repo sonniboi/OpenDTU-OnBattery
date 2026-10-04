@@ -99,13 +99,5 @@ private:
     uint8_t _captureChIdx = 0;
     uint32_t _captureLastHop = 0;
 
-    // HOMELAB 2026-10-04: follow the MIT fragment hopping during a burst
-    bool _mitFollow = false;
-    uint8_t _mitBaseChannel = 0;
-    uint32_t _mitAnchorMillis = 0;
-    uint8_t _mitAnchorFragment = 0;
-    int8_t _mitCurrentOffset = 0;
-    static constexpr int32_t MIT_FIRST_MS = 40; // TX -> fragment 0 (virtual)
-    static constexpr int32_t MIT_STEP_MS = 49; // spacing between fragments
     static constexpr uint32_t CAPTURE_HOP_INTERVAL_MS = 50; // dwell time per channel (50ms × 29ch = ~1.5s sweep)
 };

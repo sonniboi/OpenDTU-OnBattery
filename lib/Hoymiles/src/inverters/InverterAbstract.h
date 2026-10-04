@@ -40,7 +40,7 @@ typedef struct {
 } channelMetaData_t;
 
 #define MAX_RF_FRAGMENT_COUNT 13
-#define MAX_STALLED_RESEND_COUNT 2 // fresh requests after stalled retransmits
+#define MAX_STALLED_RESEND_COUNT 3 // fresh requests after stalled retransmits
 
 class CommandAbstract;
 
