@@ -407,6 +407,83 @@ void ARDUINO_ISR_ATTR HoymilesRadio_CMT::handleInt2()
     _packetReceived = true;
 }
 
+static int8_t mitWrap(const int8_t offset)
+{
+    // map to {-1, 0, +1}
+    return static_cast<int8_t>(((offset + 1) % 3 + 3) % 3 - 1);
+}
+
+void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
+{
+    const uint32_t start = millis();
+    int32_t anchorMs = MIT_FIRST_MS; // expected arrival of fragment 1
+    uint8_t anchorFragment = 1;
+    int8_t currentOffset = 0x7F;
+    uint8_t received = 0;
+    bool done = false;
+
+    _radio->startListening();
+    while (!done && millis() - start < MIT_BURST_MAX_MS) {
+        const int32_t now = static_cast<int32_t>(millis() - start);
+
+        // fragment expected in the current slot (slot switch half way between)
+        int32_t k = anchorFragment + (now - anchorMs + MIT_STEP_MS / 2) / MIT_STEP_MS;
+        if (now < anchorMs - MIT_STEP_MS / 2) {
+            k = anchorFragment;
+        }
+        if (k < 1) {
+            k = 1;
+        }
+        if (k >= MAX_RF_FRAGMENT_COUNT) {
+            break;
+        }
+
+        const int8_t offset = mitWrap(_mitPhase + static_cast<int8_t>((k - 1) % 3));
+        if (offset != currentOffset) {
+            currentOffset = offset;
+            _radio->stopListening();
+            _radio->setChannel(static_cast<uint8_t>(baseChannel + offset));
+            _radio->startListening();
+        }
+
+        if (_radio->available()) {
+            fragment_t f;
+            memset(f.fragment, 0xcc, MAX_RF_PAYLOAD_SIZE);
+            const uint8_t payloadSize = _radio->getDynamicPayloadSize();
+            f.len = std::min<uint8_t>(payloadSize, MAX_RF_PAYLOAD_SIZE);
+            f.channel = _radio->getChannel();
+            f.rssi = _radio->getRssiDBm();
+            f.wasReceived = false;
+            f.mainCmd = 0x00;
+            _radio->read(f.fragment, f.len);
+            _radio->startListening(); // the chip leaves RX after a packet
+
+            if (payloadSize <= MAX_RF_PAYLOAD_SIZE && f.len > 10 && _rxBuffer.size() < FRAGMENT_BUFFER_SIZE) {
+                _rxBuffer.push(f);
+                received++;
+                const uint8_t fid = f.fragment[9] & 0x7F;
+                if (fid > 0 && fid < MAX_RF_FRAGMENT_COUNT) {
+                    // learn the phase (offset of fragment 1) and re-anchor the timing
+                    _mitPhase = mitWrap(currentOffset - static_cast<int8_t>((fid - 1) % 3));
+                    anchorFragment = fid;
+                    anchorMs = static_cast<int32_t>(millis() - start);
+                }
+                if (f.fragment[9] & 0x80) {
+                    done = true;
+                }
+            }
+        }
+        delayMicroseconds(200);
+    }
+
+    if (received == 0) {
+        // nothing heard: the phase guess is probably wrong, try the next one
+        _mitPhase = mitWrap(_mitPhase + 1);
+    }
+    _packetReceived = false;
+    ESP_LOGI(TAG, "RX MIT burst: %" PRIu8 " fragments in %" PRIu32 " ms, phase %+d", received, millis() - start, _mitPhase);
+}
+
 void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
 {
     cmd.incrementSendCount();
@@ -448,18 +525,16 @@ void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
         }
     }
 
-    // HOMELAB 2026-10-04: without AC the MIT sends its answer fragments
-    // round-robin over {base-1, base, base+1} (fragment k on offset (k-1)%3-1,
-    // ~50 ms apart) and ignores retransmit requests. Following the hops in
-    // loop() is too slow, so listen on one channel per send of the same request
-    // and collect the fragments over three bursts (the CRC over the whole
-    // payload rejects a mix of differing bursts).
+    // HOMELAB 2026-10-04: without AC the MIT sends its answer as a burst,
+    // fragment k at ~89 + 50*(k-1) ms after the request, each fragment one
+    // channel further in {base-1, base, base+1} (cyclic). Retransmits are
+    // ignored and values change between bursts (CRC), so all fragments must be
+    // caught from ONE burst. loop() is too slow for that: receive the burst
+    // here, blocking for < 0,8 s, switching channels on a fixed schedule.
     if (serialPrefix == 0x1520 && !isRequestFrame && cmd.getDataPayload()[0] == 0x15) {
         const uint8_t baseChannel = getChannelFromFrequency(_inverterTargetFrequency);
         if (baseChannel != 0xFF && baseChannel >= 2 && baseChannel <= 0xFD) {
-            const int8_t offset = static_cast<int8_t>((cmd.getSendCount() - 1) % 3) - 1;
-            _radio->setChannel(static_cast<uint8_t>(baseChannel + offset));
-            ESP_LOGI(TAG, "RX MIT: %s send %" PRIu8 " listening on offset %+d", cmd.getCommandName().c_str(), cmd.getSendCount(), offset);
+            receiveMitBurst(baseChannel);
         }
     }
 
