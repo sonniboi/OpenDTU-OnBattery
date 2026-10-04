@@ -133,6 +133,16 @@ uint8_t MIT_8CH::getMaxStalledRetransmitCount() const
     return 2;
 }
 
+bool MIT_8CH::sendAlarmLogRequest(const bool force)
+{
+    // HOMELAB 2026-10-04: the AlarmData answer (12 fragments, 12 s timeout) is
+    // the one that fails most often. Hoymiles.cpp forces it again after every
+    // failure, which keeps RealTimeRunData out of the queue. Only ask when the
+    // event counter changed.
+    (void)force;
+    return HM_Abstract::sendAlarmLogRequest(false);
+}
+
 bool MIT_8CH::isValidSerial(const uint64_t serial)
 {
     // serial >= 0x152000000000 && serial <= 0x1520ffffffff

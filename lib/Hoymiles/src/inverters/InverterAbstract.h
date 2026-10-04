@@ -40,6 +40,7 @@ typedef struct {
 } channelMetaData_t;
 
 #define MAX_RF_FRAGMENT_COUNT 13
+#define MAX_STALLED_RESEND_COUNT 2 // fresh requests after stalled retransmits
 
 class CommandAbstract;
 
@@ -161,6 +162,7 @@ private:
 
     // true if the partial answer stalled and the whole request should be resent
     bool partialAnswerStalled(CommandAbstract& cmd);
+    uint8_t stalledResendOrTimeout(CommandAbstract& cmd);
 
     bool _enablePolling = true;
     bool _enableCommands = true;

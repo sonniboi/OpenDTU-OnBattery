@@ -101,7 +101,7 @@ bool InverterAbstract::partialAnswerStalled(CommandAbstract& cmd)
     // HOMELAB 2026-10-04: without AC the MIT answers the first request partially
     // and then ignores every retransmit. Drop the partial answer and ask again
     // (fragments of different bursts cannot be combined, the CRC covers all).
-    return cmd.getSendCount() <= cmd.getMaxResendCount();
+    return true;
 }
 
 void InverterAbstract::setName(const char* name)
@@ -295,6 +295,18 @@ void InverterAbstract::addRxFragment(const uint8_t fragment[], const uint8_t len
     }
 }
 
+uint8_t InverterAbstract::stalledResendOrTimeout(CommandAbstract& cmd)
+{
+    // at most MAX_STALLED_RESEND_COUNT fresh requests, then give up right away
+    // instead of falling back to the long retransmit tail (blocks the queue)
+    if (cmd.getSendCount() <= MAX_STALLED_RESEND_COUNT) {
+        clearRxFragmentBuffer();
+        return FRAGMENT_PARTIAL_RESEND;
+    }
+    cmd.gotTimeout();
+    return FRAGMENT_RETRANSMIT_TIMEOUT;
+}
+
 // Returns Zero on Success or the Fragment ID for retransmit or error code
 uint8_t InverterAbstract::verifyAllFragments(CommandAbstract& cmd)
 {
@@ -313,8 +325,7 @@ uint8_t InverterAbstract::verifyAllFragments(CommandAbstract& cmd)
     if (_rxFragmentMaxPacketId == 0) {
         ESP_LOGW(TAG, "Last missing");
         if (partialAnswerStalled(cmd)) {
-            clearRxFragmentBuffer();
-            return FRAGMENT_PARTIAL_RESEND;
+            return stalledResendOrTimeout(cmd);
         }
         if (_rxFragmentRetransmitCnt++ < cmd.getMaxRetransmitCount()) {
             return _rxFragmentLastPacketId + 1;
@@ -329,8 +340,7 @@ uint8_t InverterAbstract::verifyAllFragments(CommandAbstract& cmd)
         if (!_rxFragmentBuffer[i].wasReceived) {
             ESP_LOGW(TAG, "Middle missing");
             if (partialAnswerStalled(cmd)) {
-                clearRxFragmentBuffer();
-                return FRAGMENT_PARTIAL_RESEND;
+                return stalledResendOrTimeout(cmd);
             }
             if (_rxFragmentRetransmitCnt++ < cmd.getMaxRetransmitCount()) {
                 return i + 1;
