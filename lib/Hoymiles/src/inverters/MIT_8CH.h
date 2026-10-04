@@ -16,4 +16,5 @@ public:
     uint32_t getRealTimeRunDataCommandTimeout() const override;
     uint32_t getAlarmDataCommandTimeout() const override;
     uint8_t getMaxRetransmitCount() const override;
+    uint8_t getMaxStalledRetransmitCount() const override;
 };

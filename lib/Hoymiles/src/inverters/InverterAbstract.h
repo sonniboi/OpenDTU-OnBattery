@@ -21,6 +21,7 @@ enum {
     FRAGMENT_ALL_MISSING_TIMEOUT = 254,
     FRAGMENT_RETRANSMIT_TIMEOUT = 253,
     FRAGMENT_HANDLE_ERROR = 252,
+    FRAGMENT_PARTIAL_RESEND = 251,
     FRAGMENT_OK = 0
 };
 
@@ -61,6 +62,9 @@ public:
     virtual uint32_t getRealTimeRunDataCommandTimeout() const;
     virtual uint32_t getAlarmDataCommandTimeout() const;
     virtual uint8_t getMaxRetransmitCount() const;
+    // number of retransmit requests without any new fragment after which the
+    // partial answer is dropped and the whole request is sent again (0 = off)
+    virtual uint8_t getMaxStalledRetransmitCount() const;
 
     bool isProducing();
     bool isReachable();
@@ -152,6 +156,11 @@ private:
     uint8_t _rxFragmentMaxPacketId = 0;
     uint8_t _rxFragmentLastPacketId = 0;
     uint8_t _rxFragmentRetransmitCnt = 0;
+    uint8_t _rxFragmentReceivedAtRetransmit = 0;
+    uint8_t _rxFragmentStalledCnt = 0;
+
+    // true if the partial answer stalled and the whole request should be resent
+    bool partialAnswerStalled(CommandAbstract& cmd);
 
     bool _enablePolling = true;
     bool _enableCommands = true;

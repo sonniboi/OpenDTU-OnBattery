@@ -72,6 +72,10 @@ void HoymilesRadio::handleReceivedPackage()
                 ESP_LOGW(TAG, "Nothing received, resend whole request");
                 sendLastPacketAgain();
 
+            } else if (verifyResult == FRAGMENT_PARTIAL_RESEND) {
+                ESP_LOGW(TAG, "Retransmits stalled, resend whole request");
+                sendLastPacketAgain();
+
             } else if (verifyResult == FRAGMENT_ALL_MISSING_TIMEOUT) {
                 ESP_LOGW(TAG, "Nothing received, resend count exeeded");
                 // Statistics: Count RX Fail No Answer

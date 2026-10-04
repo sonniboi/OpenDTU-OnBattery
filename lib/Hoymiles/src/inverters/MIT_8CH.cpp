@@ -128,6 +128,11 @@ uint8_t MIT_8CH::getMaxRetransmitCount() const
     return MAX_MIT_RETRANSMIT_COUNT;
 }
 
+uint8_t MIT_8CH::getMaxStalledRetransmitCount() const
+{
+    return 2;
+}
+
 bool MIT_8CH::isValidSerial(const uint64_t serial)
 {
     // serial >= 0x152000000000 && serial <= 0x1520ffffffff

@@ -69,6 +69,41 @@ uint8_t InverterAbstract::getMaxRetransmitCount() const
     return MAX_DEFAULT_RETRANSMIT_COUNT;
 }
 
+uint8_t InverterAbstract::getMaxStalledRetransmitCount() const
+{
+    return 0;
+}
+
+bool InverterAbstract::partialAnswerStalled(CommandAbstract& cmd)
+{
+    const uint8_t maxStalled = getMaxStalledRetransmitCount();
+    if (maxStalled == 0) {
+        return false;
+    }
+
+    uint8_t received = 0;
+    for (uint8_t i = 0; i < MAX_RF_FRAGMENT_COUNT; i++) {
+        if (_rxFragmentBuffer[i].wasReceived) {
+            received++;
+        }
+    }
+
+    if (received > _rxFragmentReceivedAtRetransmit) {
+        _rxFragmentReceivedAtRetransmit = received;
+        _rxFragmentStalledCnt = 0;
+        return false;
+    }
+
+    if (++_rxFragmentStalledCnt <= maxStalled) {
+        return false;
+    }
+
+    // HOMELAB 2026-10-04: without AC the MIT answers the first request partially
+    // and then ignores every retransmit. Drop the partial answer and ask again
+    // (fragments of different bursts cannot be combined, the CRC covers all).
+    return cmd.getSendCount() <= cmd.getMaxResendCount();
+}
+
 void InverterAbstract::setName(const char* name)
 {
     uint8_t len = strlen(name);
@@ -212,6 +247,8 @@ void InverterAbstract::clearRxFragmentBuffer()
     _rxFragmentMaxPacketId = 0;
     _rxFragmentLastPacketId = 0;
     _rxFragmentRetransmitCnt = 0;
+    _rxFragmentReceivedAtRetransmit = 0;
+    _rxFragmentStalledCnt = 0;
 }
 
 void InverterAbstract::addRxFragment(const uint8_t fragment[], const uint8_t len, const int8_t rssi)
@@ -275,6 +312,10 @@ uint8_t InverterAbstract::verifyAllFragments(CommandAbstract& cmd)
     // Last fragment is missing (the one with 0x80)
     if (_rxFragmentMaxPacketId == 0) {
         ESP_LOGW(TAG, "Last missing");
+        if (partialAnswerStalled(cmd)) {
+            clearRxFragmentBuffer();
+            return FRAGMENT_PARTIAL_RESEND;
+        }
         if (_rxFragmentRetransmitCnt++ < cmd.getMaxRetransmitCount()) {
             return _rxFragmentLastPacketId + 1;
         } else {
@@ -287,6 +328,10 @@ uint8_t InverterAbstract::verifyAllFragments(CommandAbstract& cmd)
     for (uint8_t i = 0; i < _rxFragmentMaxPacketId - 1; i++) {
         if (!_rxFragmentBuffer[i].wasReceived) {
             ESP_LOGW(TAG, "Middle missing");
+            if (partialAnswerStalled(cmd)) {
+                clearRxFragmentBuffer();
+                return FRAGMENT_PARTIAL_RESEND;
+            }
             if (_rxFragmentRetransmitCnt++ < cmd.getMaxRetransmitCount()) {
                 return i + 1;
             } else {
