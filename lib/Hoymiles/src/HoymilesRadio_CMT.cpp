@@ -448,6 +448,24 @@ void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
         }
     }
 
+    // HOMELAB-TEST 2026-10-04: channel survey. Without AC the MIT puts only every
+    // third fragment on the base channel. Listen on a different channel for each
+    // new MIT data request (TX stays on the base channel) to learn where the
+    // other fragments are sent. Offsets in channel steps of 250 kHz.
+    if (serialPrefix == 0x1520 && !isRequestFrame && cmd.getDataPayload()[0] == 0x15) {
+        static const int8_t sniffOffsets[] = { 0, 1, 2, -1, -2, 3, -3 };
+        static uint8_t sniffIdx = 0;
+        const int8_t offset = sniffOffsets[sniffIdx];
+        sniffIdx = (sniffIdx + 1) % (sizeof(sniffOffsets) / sizeof(sniffOffsets[0]));
+        const uint8_t baseChannel = getChannelFromFrequency(_inverterTargetFrequency);
+        const int16_t sniffChannel = static_cast<int16_t>(baseChannel) + offset;
+        if (baseChannel != 0xFF && sniffChannel >= 1 && sniffChannel <= 0xFE) {
+            _radio->setChannel(static_cast<uint8_t>(sniffChannel));
+            ESP_LOGI(TAG, "RX SNIFF: %s listening on offset %+d (%.2f MHz)", cmd.getCommandName().c_str(), offset,
+                getFrequencyFromChannel(static_cast<uint8_t>(sniffChannel)) / 1000000.0);
+        }
+    }
+
     _radio->startListening();
     _busyFlag = true;
     _rxTimeout.set(cmd.getTimeout());
