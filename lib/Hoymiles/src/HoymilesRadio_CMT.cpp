@@ -421,9 +421,6 @@ void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
     int8_t currentOffset = 0x7F;
     uint8_t received = 0;
     bool done = false;
-    char evlog[200];
-    size_t evlen = 0;
-    evlog[0] = 0;
 
     _radio->startListening();
     while (!done && millis() - start < MIT_BURST_MAX_MS) {
@@ -449,10 +446,7 @@ void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
             // no stopListening() here: it puts the chip to SLEEP and the crystal
             // restart costs the next fragment. startListening() goes via STBY.
             _radio->setChannel(static_cast<uint8_t>(baseChannel + offset));
-            const bool rxOk = _radio->startListening();
-            if (evlen < sizeof(evlog) - 16) {
-                evlen += snprintf(evlog + evlen, sizeof(evlog) - evlen, " %d:L%+d%s", now, offset, rxOk ? "" : "!");
-            }
+            _radio->startListening();
         }
 
         if (_radio->available()) {
@@ -471,9 +465,6 @@ void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
                 _rxBuffer.push(f);
                 received++;
                 const uint8_t fid = f.fragment[9] & 0x7F;
-                if (evlen < sizeof(evlog) - 16) {
-                    evlen += snprintf(evlog + evlen, sizeof(evlog) - evlen, " %lu:F%u", millis() - start, fid);
-                }
                 if (fid > 0 && fid < MAX_RF_FRAGMENT_COUNT) {
                     // learn the phase (offset of fragment 1) and re-anchor the timing
                     _mitPhase = mitWrap(currentOffset - static_cast<int8_t>((fid - 1) % 3));
@@ -493,7 +484,7 @@ void HoymilesRadio_CMT::receiveMitBurst(const uint8_t baseChannel)
         _mitPhase = mitWrap(_mitPhase + 1);
     }
     _packetReceived = false;
-    ESP_LOGI(TAG, "RX MIT burst: %" PRIu8 " fragments in %" PRIu32 " ms, phase %+d |%s", received, millis() - start, _mitPhase, evlog);
+    ESP_LOGD(TAG, "RX MIT burst: %" PRIu8 " fragments in %" PRIu32 " ms, phase %+d", received, millis() - start, _mitPhase);
 }
 
 void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
