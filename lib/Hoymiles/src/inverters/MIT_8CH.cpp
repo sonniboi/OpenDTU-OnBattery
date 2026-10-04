@@ -108,19 +108,22 @@ MIT_8CH::MIT_8CH(HoymilesRadio* radio, const uint64_t serial)
 {
 }
 
+// HOMELAB 2026-10-04: without AC the MIT sends a burst within ~0,4 s (6
+// fragments) / ~0,7 s (12 fragments). Upstream values (2/6/12 s) are for the
+// ~835 ms fragment spacing reported WITH AC — restore them for AC operation.
 uint32_t MIT_8CH::getSingleDataCommandTimeout() const
 {
-    return 2000;
+    return 1000;
 }
 
 uint32_t MIT_8CH::getRealTimeRunDataCommandTimeout() const
 {
-    return 6000;
+    return 1200;
 }
 
 uint32_t MIT_8CH::getAlarmDataCommandTimeout() const
 {
-    return 12000;
+    return 1500;
 }
 
 uint8_t MIT_8CH::getMaxRetransmitCount() const
@@ -130,7 +133,8 @@ uint8_t MIT_8CH::getMaxRetransmitCount() const
 
 uint8_t MIT_8CH::getMaxStalledRetransmitCount() const
 {
-    return 1;
+    // HOMELAB 2026-10-04: without AC the MIT ignores every retransmit request
+    return 0;
 }
 
 bool MIT_8CH::sendChangeChannelRequest()

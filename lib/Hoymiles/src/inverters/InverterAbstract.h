@@ -40,7 +40,8 @@ typedef struct {
 } channelMetaData_t;
 
 #define MAX_RF_FRAGMENT_COUNT 13
-#define MAX_STALLED_RESEND_COUNT 3 // fresh requests after stalled retransmits
+#define MAX_STALLED_RESEND_COUNT 8 // fresh requests after stalled retransmits
+#define STALLED_RETRANSMIT_DISABLED 0xFF
 
 class CommandAbstract;
 
@@ -64,7 +65,7 @@ public:
     virtual uint32_t getAlarmDataCommandTimeout() const;
     virtual uint8_t getMaxRetransmitCount() const;
     // number of retransmit requests without any new fragment after which the
-    // partial answer is dropped and the whole request is sent again (0 = off)
+    // whole request is sent again (0 = immediately, STALLED_RETRANSMIT_DISABLED = off)
     virtual uint8_t getMaxStalledRetransmitCount() const;
     uint32_t getLastRxFragmentMillis() const { return _lastRxFragmentMillis; }
 

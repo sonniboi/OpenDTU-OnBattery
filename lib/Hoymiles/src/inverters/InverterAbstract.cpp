@@ -71,14 +71,17 @@ uint8_t InverterAbstract::getMaxRetransmitCount() const
 
 uint8_t InverterAbstract::getMaxStalledRetransmitCount() const
 {
-    return 0;
+    return STALLED_RETRANSMIT_DISABLED;
 }
 
 bool InverterAbstract::partialAnswerStalled(CommandAbstract& cmd)
 {
     const uint8_t maxStalled = getMaxStalledRetransmitCount();
-    if (maxStalled == 0) {
+    if (maxStalled == STALLED_RETRANSMIT_DISABLED) {
         return false;
+    }
+    if (maxStalled == 0) {
+        return true; // never retransmit, always send the whole request again
     }
 
     uint8_t received = 0;
