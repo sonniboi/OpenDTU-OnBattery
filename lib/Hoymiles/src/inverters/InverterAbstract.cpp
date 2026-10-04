@@ -252,6 +252,39 @@ void InverterAbstract::clearRxFragmentBuffer()
     _rxFragmentRetransmitCnt = 0;
     _rxFragmentReceivedAtRetransmit = 0;
     _rxFragmentStalledCnt = 0;
+    memset(_rxFragmentBurst, 0, sizeof(_rxFragmentBurst));
+    _rxBurstIdx = 0;
+}
+
+void InverterAbstract::keepLatestBurstOnly()
+{
+    // the latest burst is the newest index that delivered a fragment
+    uint8_t latest = 0;
+    for (uint8_t i = 0; i < MAX_RF_FRAGMENT_COUNT; i++) {
+        if (_rxFragmentBuffer[i].wasReceived && _rxFragmentBurst[i] > latest) {
+            latest = _rxFragmentBurst[i];
+        }
+    }
+
+    const uint8_t maxId = _rxFragmentMaxPacketId;
+    _rxFragmentLastPacketId = 0;
+    _rxFragmentMaxPacketId = 0;
+    uint8_t received = 0;
+    for (uint8_t i = 0; i < MAX_RF_FRAGMENT_COUNT; i++) {
+        if (!_rxFragmentBuffer[i].wasReceived) {
+            continue;
+        }
+        if (_rxFragmentBurst[i] != latest) {
+            _rxFragmentBuffer[i].wasReceived = false;
+            continue;
+        }
+        received++;
+        _rxFragmentLastPacketId = i + 1;
+        if (maxId == i + 1) {
+            _rxFragmentMaxPacketId = maxId;
+        }
+    }
+    _rxFragmentReceivedAtRetransmit = received;
 }
 
 void InverterAbstract::addRxFragment(const uint8_t fragment[], const uint8_t len, const int8_t rssi)
@@ -284,6 +317,7 @@ void InverterAbstract::addRxFragment(const uint8_t fragment[], const uint8_t len
     }
 
     _lastRxFragmentMillis = millis();
+    _rxFragmentBurst[fragmentId - 1] = _rxBurstIdx;
     memcpy(_rxFragmentBuffer[fragmentId - 1].fragment, &fragment[10], len - 11);
     _rxFragmentBuffer[fragmentId - 1].len = len - 11;
     _rxFragmentBuffer[fragmentId - 1].mainCmd = fragment[0];
@@ -308,6 +342,7 @@ uint8_t InverterAbstract::stalledResendOrTimeout(CommandAbstract& cmd)
         // different channel and fills the gaps
         _rxFragmentRetransmitCnt = 0;
         _rxFragmentStalledCnt = 0;
+        _rxBurstIdx++;
         return FRAGMENT_PARTIAL_RESEND;
     }
     cmd.gotTimeout();
@@ -359,6 +394,18 @@ uint8_t InverterAbstract::verifyAllFragments(CommandAbstract& cmd)
     }
 
     if (!cmd.handleResponse(_rxFragmentBuffer, _rxFragmentMaxPacketId)) {
+        // HOMELAB 2026-10-04: fragments collected over several bursts fail the
+        // CRC when the values changed in between. Keep the newest burst and go
+        // on collecting instead of dropping the whole request.
+        if (getMaxStalledRetransmitCount() != STALLED_RETRANSMIT_DISABLED
+            && cmd.getSendCount() <= MAX_STALLED_RESEND_COUNT) {
+            ESP_LOGW(TAG, "CRC mismatch of mixed bursts, keeping latest burst");
+            keepLatestBurstOnly();
+            _rxFragmentRetransmitCnt = 0;
+            _rxFragmentStalledCnt = 0;
+            _rxBurstIdx++;
+            return FRAGMENT_PARTIAL_RESEND;
+        }
         cmd.gotTimeout();
         return FRAGMENT_HANDLE_ERROR;
     }

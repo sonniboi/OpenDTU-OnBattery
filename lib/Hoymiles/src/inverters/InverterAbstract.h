@@ -40,7 +40,7 @@ typedef struct {
 } channelMetaData_t;
 
 #define MAX_RF_FRAGMENT_COUNT 13
-#define MAX_STALLED_RESEND_COUNT 8 // fresh requests after stalled retransmits
+#define MAX_STALLED_RESEND_COUNT 11 // fresh requests after stalled retransmits
 #define STALLED_RETRANSMIT_DISABLED 0xFF
 
 class CommandAbstract;
@@ -162,6 +162,11 @@ private:
     uint8_t _rxFragmentReceivedAtRetransmit = 0;
     uint8_t _rxFragmentStalledCnt = 0;
     uint32_t _lastRxFragmentMillis = 0;
+    uint8_t _rxFragmentBurst[MAX_RF_FRAGMENT_COUNT] = {};
+    uint8_t _rxBurstIdx = 0;
+
+    // keep only the fragments of the latest burst (after a CRC mismatch)
+    void keepLatestBurstOnly();
 
     // true if the partial answer stalled and the whole request should be resent
     bool partialAnswerStalled(CommandAbstract& cmd);
