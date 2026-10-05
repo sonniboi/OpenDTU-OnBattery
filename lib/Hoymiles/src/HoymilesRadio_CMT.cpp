@@ -541,20 +541,6 @@ void HoymilesRadio_CMT::sendEsbPacket(CommandAbstract& cmd)
         }
     }
 
-    // HOMELAB 2026-10-05: the acknowledgement of control commands (0x51: power,
-    // restart, limit) of the MIT hops over {base-1, base, base+1} like the data
-    // fragments, but only the base channel was heard, so most acks were lost, the
-    // command was repeated until a lucky one arrived (restart loop, GUI "Pending"
-    // for 30+ s). Listen on a different channel for every send of the command.
-    if (serialPrefix == 0x1520 && cmd.getDataPayload()[0] == 0x51) {
-        const uint8_t baseChannel = getChannelFromFrequency(_inverterTargetFrequency);
-        if (baseChannel != 0xFF && baseChannel >= 2 && baseChannel <= 0xFD) {
-            static const int8_t ackOffsets[] = { 0, 1, -1 };
-            const int8_t offset = ackOffsets[(cmd.getSendCount() - 1) % 3];
-            _radio->setChannel(static_cast<uint8_t>(baseChannel + offset));
-        }
-    }
-
     _radio->startListening();
     _busyFlag = true;
     _rxTimeout.set(cmd.getTimeout());
