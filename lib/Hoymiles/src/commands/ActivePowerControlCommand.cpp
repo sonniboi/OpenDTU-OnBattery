@@ -51,7 +51,8 @@ ActivePowerControlCommand::ActivePowerControlCommand(InverterAbstract* inv, cons
 
     _payload_size = 18;
 
-    setTimeout(2000);
+    // HOMELAB 2026-11-04 TEST: MIT acks within ~80 ms when it answers at all -> retry faster
+    setTimeout(inv->supportsEarlyRxEnd() ? 500 : 2000);
 }
 
 String ActivePowerControlCommand::getCommandName() const
