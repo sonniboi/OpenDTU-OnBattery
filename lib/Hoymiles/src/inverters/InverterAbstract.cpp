@@ -64,6 +64,19 @@ uint32_t InverterAbstract::getAlarmDataCommandTimeout() const
     return 750;
 }
 
+bool InverterAbstract::allRxFragmentsReceived() const
+{
+    if (_rxFragmentMaxPacketId == 0) {
+        return false;
+    }
+    for (uint8_t i = 0; i < _rxFragmentMaxPacketId; i++) {
+        if (!_rxFragmentBuffer[i].wasReceived) {
+            return false;
+        }
+    }
+    return true;
+}
+
 uint8_t InverterAbstract::getMaxRetransmitCount() const
 {
     return MAX_DEFAULT_RETRANSMIT_COUNT;

@@ -67,6 +67,10 @@ public:
     // number of retransmit requests without any new fragment after which the
     // whole request is sent again (0 = immediately, STALLED_RETRANSMIT_DISABLED = off)
     virtual uint8_t getMaxStalledRetransmitCount() const;
+    // HOMELAB 2026-11-04: end the RX period as soon as all fragments of the
+    // answer are in, instead of always waiting for the full command timeout
+    virtual bool supportsEarlyRxEnd() const { return false; }
+    bool allRxFragmentsReceived() const;
     uint32_t getLastRxFragmentMillis() const { return _lastRxFragmentMillis; }
 
     bool isProducing();

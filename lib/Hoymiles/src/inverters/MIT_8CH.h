@@ -17,6 +17,7 @@ public:
     uint32_t getAlarmDataCommandTimeout() const override;
     uint8_t getMaxRetransmitCount() const override;
     uint8_t getMaxStalledRetransmitCount() const override;
+    bool supportsEarlyRxEnd() const override { return true; }
     bool sendAlarmLogRequest(const bool force = false) override;
     bool sendChangeChannelRequest() override;
     bool sendDevInfoRequest() override;

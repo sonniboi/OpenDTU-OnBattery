@@ -61,9 +61,18 @@ void HoymilesRadio::sendLastPacketAgain()
 
 void HoymilesRadio::handleReceivedPackage()
 {
-    if (_busyFlag && _rxTimeout.occured()) {
-        ESP_LOGI(TAG, "RX Period End");
-        std::shared_ptr<InverterAbstract> inv = Hoymiles.getInverterBySerial(_commandQueue.front().get()->getTargetAddress());
+    bool earlyEnd = false;
+    std::shared_ptr<InverterAbstract> earlyInv = nullptr;
+    if (_busyFlag && !_rxTimeout.occured() && !isQueueEmpty()) {
+        // HOMELAB 2026-11-04: MIT answers within ~0.3 s but the timeout is
+        // 1.2 s (6 s with AC) -> radio blocked for the other inverters
+        earlyInv = Hoymiles.getInverterBySerial(_commandQueue.front().get()->getTargetAddress());
+        earlyEnd = earlyInv != nullptr && earlyInv->supportsEarlyRxEnd() && earlyInv->allRxFragmentsReceived();
+    }
+
+    if (_busyFlag && (earlyEnd || _rxTimeout.occured())) {
+        ESP_LOGI(TAG, "RX Period End%s", earlyEnd ? " (early, all fragments)" : "");
+        std::shared_ptr<InverterAbstract> inv = earlyEnd ? earlyInv : Hoymiles.getInverterBySerial(_commandQueue.front().get()->getTargetAddress());
 
         if (nullptr != inv) {
             CommandAbstract* cmd = _commandQueue.front().get();
