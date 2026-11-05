@@ -51,8 +51,10 @@ ActivePowerControlCommand::ActivePowerControlCommand(InverterAbstract* inv, cons
 
     _payload_size = 18;
 
-    // HOMELAB 2026-11-04 TEST: MIT acks within ~80 ms when it answers at all -> retry faster
-    setTimeout(inv->supportsEarlyRxEnd() ? 500 : 2000);
+    // HOMELAB 2026-11-04/05: the MIT never acks the first send of a control
+    // command (capture 05.11.: 0/10), but acks a repeat ~72 ms after TX on the
+    // base channel -> keep the RX window short so the repeat follows quickly.
+    setTimeout(inv->supportsEarlyRxEnd() ? 200 : 2000);
 }
 
 String ActivePowerControlCommand::getCommandName() const
