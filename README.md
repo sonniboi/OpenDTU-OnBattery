@@ -9,10 +9,10 @@
 >
 > Everything else is upstream OpenDTU-OnBattery; see the changelog below for the full upstream feature set.
 
-[![OpenDTU-OnBattery Build](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/build.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/build.yml)
-[![cpplint](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/cpplint.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/cpplint.yml)
-[![Yarn Linting](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/yarnlint.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/yarnlint.yml)
-[![Yarn Prettier](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/yarnprettier.yml/badge.svg)](https://github.com/hoylabs/OpenDTU-OnBattery/actions/workflows/yarnprettier.yml)
+[![Custom release](https://img.shields.io/github/v/release/sonniboi/OpenDTU-OnBattery?label=custom%20release)](https://github.com/sonniboi/OpenDTU-OnBattery/releases)
+[![cpplint](https://github.com/sonniboi/OpenDTU-OnBattery/actions/workflows/cpplint.yml/badge.svg?branch=custom-3phase-build)](https://github.com/sonniboi/OpenDTU-OnBattery/actions/workflows/cpplint.yml?query=branch%3Acustom-3phase-build)
+[![Yarn Linting](https://github.com/sonniboi/OpenDTU-OnBattery/actions/workflows/yarnlint.yml/badge.svg?branch=custom-3phase-build)](https://github.com/sonniboi/OpenDTU-OnBattery/actions/workflows/yarnlint.yml?query=branch%3Acustom-3phase-build)
+[![Yarn Prettier](https://github.com/sonniboi/OpenDTU-OnBattery/actions/workflows/yarnprettier.yml/badge.svg?branch=custom-3phase-build)](https://github.com/sonniboi/OpenDTU-OnBattery/actions/workflows/yarnprettier.yml?query=branch%3Acustom-3phase-build)
 ![GitHub tag (latest SemVer)](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/AndreasBoehm/856dda48c1cadac6ea495213340c612b/raw/openDTUcoreRelease.json)
 
 - [OpenDTU-OnBattery](#opendtu-onbattery)
