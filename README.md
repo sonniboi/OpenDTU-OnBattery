@@ -5,6 +5,7 @@
 > - **3-phase live view for Hoymiles HMT inverters** — correct per-phase AC display (voltage L1–L3 + neutral, current L1–L3) for HMT-2250-6T / HMT-1800-6T and similar models with 3×AC outputs, instead of the single-phase summary the upstream view assumes.
 > - **Inverter firmware version in the live view header** — each inverter card shows its Hoymiles firmware build (e.g. `1.0.10`) inline next to the serial number, no need to open the device-info dialog.
 > - **Reduced Dynamic Power Limiter (DPL) reaction latency** — limit-update backoff lowered to 32 ms and power-meter freshness window to 500 ms, for faster zero-feed-in regulation on battery-powered setups.
+> - **Battery voltage floor for the Dynamic Power Limiter** — the DPL stops when the SoC *or* the load-corrected battery voltage reaches its stop threshold (upstream checks the voltage only as fallback while the SoC is stale), and restarts only when both start thresholds are met. Voltage thresholds at or above 58.4 V disable the floor. Protects LiFePO4 banks whose BMS SoC lags near empty.
 > - **Branch / PR link in the firmware info** — custom builds expose their source branch and PR in the web UI, so it is always clear which build is running.
 >
 > Everything else is upstream OpenDTU-OnBattery; see the changelog below for the full upstream feature set.
