@@ -7,6 +7,7 @@
 #include <battery/Stats.h>
 #include <powermeter/Controller.h>
 #include "PowerLimiter.h"
+#include "BatteryVoltageFloor.h"
 #include "Configuration.h"
 #include "MqttSettings.h"
 #include "NetworkSettings.h"
@@ -874,22 +875,35 @@ bool PowerLimiterClass::isStartThresholdReached() const
 {
     auto const& config = Configuration.get();
 
-    return testThreshold(
+    if (!testThreshold(
             config.PowerLimiter.BatterySocStartThreshold,
             config.PowerLimiter.VoltageStartThreshold,
-            [](float a, float b) -> bool { return a >= b; }
-    );
+            [](float a, float b) -> bool { return a >= b; })) {
+        return false;
+    }
+
+    // custom: the voltage floor needs a hysteresis, see BatteryVoltageFloor.h
+    return BatteryVoltageFloor::startAllowed(_loadCorrectedVoltage,
+            config.PowerLimiter.VoltageStartThreshold,
+            config.PowerLimiter.VoltageStopThreshold);
 }
 
 bool PowerLimiterClass::isStopThresholdReached() const
 {
     auto const& config = Configuration.get();
 
-    return testThreshold(
+    if (testThreshold(
             config.PowerLimiter.BatterySocStopThreshold,
             config.PowerLimiter.VoltageStopThreshold,
-            [](float a, float b) -> bool { return a <= b; }
-    );
+            [](float a, float b) -> bool { return a <= b; })) {
+        return true;
+    }
+
+    // custom: stop on the load-corrected voltage even while the SoC is valid,
+    // see BatteryVoltageFloor.h
+    return BatteryVoltageFloor::stopReached(_loadCorrectedVoltage,
+            config.PowerLimiter.VoltageStartThreshold,
+            config.PowerLimiter.VoltageStopThreshold);
 }
 
 bool PowerLimiterClass::isBelowStopThreshold() const
